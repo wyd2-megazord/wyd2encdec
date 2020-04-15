@@ -1,5 +1,5 @@
 # WYD2EncDec
-This project consists in implemeting WYD2 Enc/Dec using multiple programming languages.
+This project consists in implemeting WYD2 Enc/Dec main loop using multiple programming languages.
 
 ## Data
 The project has a basic keys.dat and a set of packets locate inside [data](/data) folder.
@@ -34,7 +34,8 @@ struct MsgHeader {
 ```
 
 ## Implementations
-See the checklist below to see what implementations are ready, it also has link to the language specific documentation.
+See the checklist below to see what implementations are ready,
+it also has link to the language specific documentation.
 
 - [ ] [C++](/cpp)
 - [ ] [C#](/csharp)
@@ -43,6 +44,13 @@ See the checklist below to see what implementations are ready, it also has link 
 - [ ] [JS](/js)
 - [ ] [PHP](/php)
 - [ ] [Rust](/rust)
+
+### Executing
+All implementations should be executed providing three arguments:
+ 1. The _**path**_ for the _**keys** file
+ 2. **enc|dec**
+ 3. The _**path**_ for the _**encrypted bin**_ file
+ 4. The _**path**_ for the _**decrypted bin**_ file
 
 ## Authors
  - Raphael Tomé Santana
