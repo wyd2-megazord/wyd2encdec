@@ -37,7 +37,7 @@ struct MsgHeader {
 See the checklist below to see what implementations are ready,
 it also has link to the language specific documentation.
 
-- [ ] [C++](/cpp)
+- [x] [C++](/cpp)
 - [ ] [C#](/csharp)
 - [ ] [Java](/java)
 - [ ] [Go](/go)
