@@ -40,7 +40,7 @@ it also has link to the language specific documentation.
 - [x] [C++](/cpp)
 - [x] [C#](/csharp)
 - [x] [Java](/java)
-- [ ] [Go](/go)
+- [x] [Go](/go)
 - [ ] [JS](/js)
 - [ ] [PHP](/php)
 - [ ] [Rust](/rust)
