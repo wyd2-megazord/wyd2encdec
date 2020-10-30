@@ -42,7 +42,7 @@ it also has link to the language specific documentation.
 - [x] [Java](/java)
 - [x] [Go](/go)
 - [ ] [JS](/js)
-- [ ] [PHP](/php)
+- [x] [PHP](/php)
 - [ ] [Rust](/rust)
 
 ### Executing
