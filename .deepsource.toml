@@ -1,0 +1,35 @@
+version = 1
+
+[[analyzers]]
+name = "php"
+enabled = true
+
+[[analyzers]]
+name = "java"
+enabled = true
+
+  [analyzers.meta]
+  runtime_version = "11"
+
+[[analyzers]]
+name = "go"
+enabled = true
+
+  [analyzers.meta]
+  import_root = "github.com/raphaelts3/wyd2encdec"
+  dependencies_vendored = false
+
+[[analyzers]]
+name = "javascript"
+enabled = true
+
+[[analyzers]]
+name = "python"
+enabled = true
+
+  [analyzers.meta]
+  runtime_version = "3.x.x"
+
+[[analyzers]]
+name = "rust"
+enabled = true
