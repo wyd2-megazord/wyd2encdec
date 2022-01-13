@@ -4,7 +4,14 @@ use std::fs;
 use std::fs::File;
 use std::io;
 use std::io::Read;
+use std::mem;
 use std::path::Path;
+use std::ptr;
+use std::str;
+
+trait Packet {
+    fn get_header(&self) -> &MsgHeader;
+}
 
 //MsgHeader defines the basic struct for a WYD2 packet header
 #[repr(C)]
@@ -15,6 +22,26 @@ struct MsgHeader {
     code: i16,      //Internal packet identifier
     index: i16,     //Index from the user that sent the packet
     timestamp: u32, //Timestamp usually get right before starting the enc/dec process
+}
+
+//MsgLockPasswordRequest defines the struct for a WYD2 LockPasswordRequest
+#[repr(C)]
+struct MsgLockPasswordRequest {
+    header: MsgHeader,  //Header
+    password: [u8; 16], //ASCII Password
+    change: i32,        // Flag to indicate if request a password change
+}
+
+impl Packet for MsgHeader {
+    fn get_header(&self) -> &MsgHeader {
+        return self;
+    }
+}
+
+impl Packet for MsgLockPasswordRequest {
+    fn get_header(&self) -> &MsgHeader {
+        return &self.header;
+    }
 }
 
 fn read_keys(file_path: &String, keys: &mut [u8]) -> () {
@@ -107,6 +134,43 @@ fn decrypt(raw_data: &mut Vec<u8>, keys: &[u8]) -> Vec<u8> {
     raw_data.to_vec()
 }
 
+unsafe fn unsafe_handle_msg_lock_password_request(
+    msg_lock_password_request: *const MsgLockPasswordRequest,
+) -> () {
+    print!(
+        "{}#unsafe\n",
+        str::from_utf8(&((*msg_lock_password_request).password)).unwrap()
+    );
+}
+
+fn handle_msg_lock_password_request(msg_lock_password_request: &MsgLockPasswordRequest) -> () {
+    print!(
+        "{}#safe\n",
+        str::from_utf8(&((*msg_lock_password_request).password)).unwrap()
+    );
+}
+
+fn handle_packets(raw_data: &Vec<u8>) -> () {
+    let src_ptr: *const u8 = raw_data.as_ptr();
+    unsafe {
+        let header = src_ptr as *const MsgHeader;
+        let code = (*header).code;
+        if code == 0xFDE {
+            print!("init handler\n");
+            unsafe_handle_msg_lock_password_request(src_ptr as *const MsgLockPasswordRequest);
+            let mut packet = mem::MaybeUninit::<MsgLockPasswordRequest>::uninit();
+            let dst_ptr = packet.as_mut_ptr();
+            ptr::copy_nonoverlapping(
+                src_ptr,
+                dst_ptr as *mut u8,
+                mem::size_of::<MsgLockPasswordRequest>(),
+            );
+            handle_msg_lock_password_request(&packet.assume_init_mut());
+            print!("finish handler\n");
+        }
+    }
+}
+
 // This is the main function
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
@@ -117,6 +181,7 @@ fn main() -> io::Result<()> {
     read_keys(&args[1], &mut keys);
     let mut encrypted_file_raw = read_raw_file(&args[3]);
     let mut decrypted_file_raw = read_raw_file(&args[4]);
+    handle_packets(&decrypted_file_raw);
     match args[2].as_str() {
         "enc" => fs::write("./encoded.bin", encrypt(&mut decrypted_file_raw, &keys))
             .expect("Unable to write file"),
