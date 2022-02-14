@@ -151,24 +151,42 @@ fn handle_msg_lock_password_request(msg_lock_password_request: &MsgLockPasswordR
 }
 
 fn handle_packets(raw_data: &Vec<u8>) -> () {
+    if raw_data.len() < 12 {
+        // Not a valid packet
+        return;
+    }
+    print!("init v1 handler\n");
     let src_ptr: *const u8 = raw_data.as_ptr();
-    unsafe {
-        let header = src_ptr as *const MsgHeader;
-        let code = (*header).code;
-        if code == 0xFDE {
-            print!("init handler\n");
+    let header = src_ptr as *const MsgHeader;
+    // SAFETY: header is not null and len(header) is > 12 which means `.code` is valid
+    let code = unsafe { (*header).code };
+    if code == 0xFDE {
+        unsafe {
             unsafe_handle_msg_lock_password_request(src_ptr as *const MsgLockPasswordRequest);
-            let mut packet = mem::MaybeUninit::<MsgLockPasswordRequest>::uninit();
-            let dst_ptr = packet.as_mut_ptr();
+        }
+        let mut packet = mem::MaybeUninit::<MsgLockPasswordRequest>::uninit();
+        let dst_ptr = packet.as_mut_ptr();
+        unsafe {
             ptr::copy_nonoverlapping(
                 src_ptr,
                 dst_ptr as *mut u8,
                 mem::size_of::<MsgLockPasswordRequest>(),
             );
-            handle_msg_lock_password_request(&packet.assume_init_mut());
-            print!("finish handler\n");
         }
+        handle_msg_lock_password_request(unsafe { &packet.assume_init_mut() });
     }
+    print!("finish v1 handler\n");
+    print!("init v2 handler\n");
+    let header_v2 = ptr::NonNull::<MsgHeader>::new(raw_data.as_ptr() as *mut MsgHeader)
+        .expect("Ptr should not be null!");
+    let ref_header = unsafe { header_v2.as_ref() };
+    let code = ref_header.code;
+    if code == 0xFDE {
+        handle_msg_lock_password_request(unsafe {
+            header_v2.cast::<MsgLockPasswordRequest>().as_ref()
+        });
+    }
+    print!("finish v2 handler\n");
 }
 
 // This is the main function
