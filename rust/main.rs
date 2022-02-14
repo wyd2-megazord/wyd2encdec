@@ -1,4 +1,5 @@
 #![allow(arithmetic_overflow)]
+use std::cmp;
 use std::env;
 use std::fs;
 use std::fs::File;
@@ -130,6 +131,41 @@ fn decrypt(raw_data: &mut Vec<u8>, keys: &[u8]) -> Vec<u8> {
             }
             index += packet_size;
         }
+    }
+    raw_data.to_vec()
+}
+
+fn decrypt_non_null(raw_data: &mut Vec<u8>, keys: &[u8]) -> Vec<u8> {
+    let mut index: isize = 0;
+    let end_index: isize = raw_data.len() as isize;
+    let ptr: *const u8 = raw_data.as_ptr();
+    let min_size = mem::size_of::<MsgHeader>() as isize;
+
+    while (end_index - index) >= min_size {
+        // SAFETY: header is always at least size_of<MsgHeader> sized
+        let current_ptr = unsafe { ptr.offset(index as isize) as *mut u8 };
+        let header = ptr::NonNull::<MsgHeader>::new(current_ptr as *mut MsgHeader)
+            .expect("Ptr should not be null!");
+        let ref_header = unsafe { header.as_ref() };
+        let packet_size = cmp::min(ref_header.size as isize, end_index - index);
+        let mut j = 4;
+        let mut key = keys[(ref_header.key as usize) << 1] as usize;
+        while j < packet_size {
+            let mapped_key = keys[((key % 256) << 1) + 1] as u32;
+            // SAFETY: packet_size is always less or equal to number of remaining bytes
+            unsafe {
+                let off = current_ptr.offset(j as isize) as *mut u8;
+                match j & 3 {
+                    0 => *off = (*off).wrapping_sub((mapped_key << 1) as u8),
+                    1 => *off = (*off).wrapping_add((mapped_key as i32 >> 3) as u8),
+                    2 => *off = (*off).wrapping_sub((mapped_key << 2) as u8),
+                    _ => *off = (*off).wrapping_add((mapped_key as i32 >> 5) as u8),
+                }
+            }
+            j += 1;
+            key += 1;
+        }
+        index += packet_size;
     }
     raw_data.to_vec()
 }
@@ -287,5 +323,13 @@ mod tests {
         let mut encrypted = default_encrypted();
         let decrypted = default_decrypted();
         assert_eq!(decrypt(&mut encrypted, &keys), decrypted);
+    }
+
+    #[test]
+    fn test_decrypt_non_null() {
+        let keys = default_keys();
+        let mut encrypted = default_encrypted();
+        let decrypted = default_decrypted();
+        assert_eq!(decrypt_non_null(&mut encrypted, &keys), decrypted);
     }
 }
