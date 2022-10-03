@@ -43,7 +43,7 @@ it also has link to the language specific documentation.
 - [x] [Go](/go)
 - [ ] [JS](/js)
 - [x] [PHP](/php)
-- [ ] [Rust](/rust)
+- [x] [Rust](/rust)
 
 ### Executing
 All implementations should be executed providing three arguments:
