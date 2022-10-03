@@ -215,7 +215,7 @@ pub mod encdec {
         msg_lock_password_request: *const MsgLockPasswordRequest,
     ) -> () {
         print!(
-            "{}#unsafe\n",
+            "{}#unsafe",
             str::from_utf8(&((*msg_lock_password_request).password)).unwrap()
         );
     }
@@ -224,7 +224,7 @@ pub mod encdec {
         msg_lock_password_request: &MsgLockPasswordRequest,
     ) -> () {
         print!(
-            "{}#safe\n",
+            "{}#safe",
             str::from_utf8(&((*msg_lock_password_request).password)).unwrap()
         );
     }
@@ -234,7 +234,7 @@ pub mod encdec {
             // Not a valid packet
             return;
         }
-        print!("init v1 handler\n");
+        print!("init v1 handler");
         let src_ptr: *const u8 = raw_data.as_ptr();
         let header = src_ptr as *const MsgHeader;
         // SAFETY: header is not null and len(header) is > 12 which means `.code` is valid
@@ -254,8 +254,8 @@ pub mod encdec {
             }
             handle_msg_lock_password_request(unsafe { &packet.assume_init_mut() });
         }
-        print!("finish v1 handler\n");
-        print!("init v2 handler\n");
+        print!("finish v1 handler");
+        print!("init v2 handler");
         let header_v2 = ptr::NonNull::<MsgHeader>::new(raw_data.as_ptr() as *mut MsgHeader)
             .expect("Ptr should not be null!");
         let ref_header = unsafe { header_v2.as_ref() };
@@ -265,7 +265,7 @@ pub mod encdec {
                 header_v2.cast::<MsgLockPasswordRequest>().as_ref()
             });
         }
-        print!("finish v2 handler\n");
+        print!("finish v2 handler");
     }
 
     #[cfg(test)]
